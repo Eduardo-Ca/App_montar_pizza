@@ -18,6 +18,7 @@ class _TelaMontarPizzaState extends State<TelaMontarPizza> with SingleTickerProv
   PizzaStore pizzaStore = PizzaStore();
   int pizzaEscolhida = 0;
   List<Animation> _animationList = <Animation>[];
+  late BoxConstraints _pizzaConstraints;
   late AnimationController _animationController;
 
 
@@ -32,12 +33,52 @@ class _TelaMontarPizzaState extends State<TelaMontarPizza> with SingleTickerProv
     Widget _buildIngredientsWidget(){
       List<Widget> elements = [];
       if(_animationList.isNotEmpty){
-        // for(int i = 0; i <_listaIngredientes.;i++){
-        //   Ingredient ingredient = _listaIngredientes[i];
-        //   for (var i = 0; i < count; i++) {
-            
-        //   }
-        // }
+        for(int i = 0; i <  pizzaStore.listaIngrendientes.length;i++){
+          Ingredient ingredient = pizzaStore.listaIngrendientes[i];
+          final ingredientWidget = Image.asset(ingredient.image,height: 50);
+
+          for (int j = 0; j < ingredient.positions.length;j++) {
+            final animation = _animationList[j];
+            final position = ingredient.positions[j];
+            final positionX = position.dx;
+            final positionY = position.dy;
+
+            if(i ==  pizzaStore.listaIngrendientes.length - 1){
+
+            double fromX = 0.0, fromY = 0.0;
+
+            if(j < 1){
+              fromX = - _pizzaConstraints.maxWidth * (1 - animation.value);
+            } else if (j < 2){
+              fromX = _pizzaConstraints.maxWidth * (1 - animation.value);
+            }else if (j < 4){
+              fromY = - _pizzaConstraints.maxHeight * (1 - animation.value);
+            }else {
+              fromY = _pizzaConstraints.maxHeight * (1 - animation.value);
+            }
+            if(animation.value > 0){
+              elements.add(
+                Transform(transform: Matrix4.identity()
+                ..translate(
+                    fromX + _pizzaConstraints.maxWidth * positionX,
+                    fromY + _pizzaConstraints.maxHeight * positionY
+                  ),
+                  child: ingredientWidget),
+                );
+              }
+            }else{
+               elements.add(
+                Transform(transform: Matrix4.identity()
+                ..translate(
+                    _pizzaConstraints.maxWidth * positionX,
+                    _pizzaConstraints.maxHeight * positionY
+                  ),
+                  child: ingredientWidget,),
+                );
+            }
+          }
+        }
+        return Stack(children: elements,);
       }
       return SizedBox.fromSize();
     }
@@ -85,13 +126,19 @@ class _TelaMontarPizzaState extends State<TelaMontarPizza> with SingleTickerProv
           elevation: 20,
           child: Stack(
             children: [
-              Expanded(flex:4,child: _detalhesPizza(),),
-              Expanded(flex:1,child:  total()),
-              Expanded(flex:1,child: _listaIngredientes(),),
-              Expanded(flex:1,child: SizedBox()),
-
-              _buildIngredientsWidget(),
-            
+              Column(
+                children: [
+                  Expanded(flex:4,child: _detalhesPizza(),),
+                  Expanded(flex:1,child:  total()),
+                  Expanded(flex:1,child: _listaIngredientes(),),
+                  Expanded(flex:1,child: SizedBox()),                                              
+                ],
+              ),
+              AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context,_){
+                    return _buildIngredientsWidget();
+              })
             ],
           ),
         ),
@@ -144,15 +191,10 @@ class _TelaMontarPizzaState extends State<TelaMontarPizza> with SingleTickerProv
                   pizzaStore.listaIngrendientes.add(ingredient);
                   pizzaStore.total += 2;
                 });
-            },
-            onWillAccept: (ingredient){
-              // for (Ingredient i in _listaIngrendientes) {
-              
-
-              // if(i.compare(ingredient!)){
-              //     return false;
-              //   }
-              // }
+                _buildIngredientsAnimation();
+                _animationController.forward(from: 0.0);
+                },
+            onWillAccept: (ingredient){     
      
                setState(() {
                   pizzaStore.focused = false;
@@ -168,6 +210,7 @@ class _TelaMontarPizzaState extends State<TelaMontarPizza> with SingleTickerProv
             },
             builder: (context,list,rejects){
               return LayoutBuilder(builder: (context,constraints){
+                _pizzaConstraints = constraints;
                 return Center(
                   child: AnimatedContainer(
                     height: pizzaStore.focused ? constraints.maxHeight : constraints.maxHeight - 35,

@@ -9,6 +9,8 @@ class ImagensConstantes {
   static const String PEA_IMAGE = "assets/img/pea.png";
   static const String PICKLE_IMAGE = "assets/img/pickle.png";
   static const String POTATO_IMAGE = "assets/img/potato.png";
+  static const String BARATA_IMAGE = "assets/img/barata.png";
+  static const String PREGO_IMAGE = "assets/img/prego.png";
   //pizzas
   static const String PIZZA =   "assets/img/pizza-";
   
